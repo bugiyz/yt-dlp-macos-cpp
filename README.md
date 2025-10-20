@@ -15,6 +15,7 @@ brew install ffmpeg
 Verify:
 
 yt-dlp --version
+
 ffmpeg -version
 
 
@@ -29,6 +30,7 @@ Put your code in main.cpp.
 Make sure the absolute paths in code match your system (check in Terminal):
 
 which yt-dlp
+
 which ffmpeg
 
 
