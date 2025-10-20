@@ -8,6 +8,7 @@ Built as an Xcode Command Line Tool, it launches yt-dlp as a subprocess, streams
 Install the two Homebrew packages:
 
 brew install yt-dlp
+
 brew install ffmpeg
 
 
