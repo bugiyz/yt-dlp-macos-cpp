@@ -1,9 +1,9 @@
-yt-dlp-macos-cpp (Xcode CLI)
+# yt-dlp-macos-cpp (Xcode CLI)
 
 A tiny C++ command-line wrapper around yt-dlp that downloads videos on macOS and saves the final merged .mp4 (with audio) straight to ~/Downloads. 
 Built as an Xcode Command Line Tool, it launches yt-dlp as a subprocess, streams progress to the console, and (optionally) opens Finder when done.
 
-Requirements (macOS)
+# Requirements (macOS)
 
 Install the two Homebrew packages:
 
@@ -19,7 +19,7 @@ ffmpeg -version
 
 Why both? yt-dlp fetches separate video+audio streams; ffmpeg merges them. Without ffmpeg, you’ll get a silent video.
 
-Build (Xcode)
+# Build (Xcode)
 
 Open the Xcode project (template: Command Line Tool, language: C++).
 
@@ -41,17 +41,17 @@ Run in Xcode.
 
 Note: Xcode doesn’t inherit your shell PATH. That’s why the code passes --ffmpeg-location and uses absolute paths.
 
-Usage
+# Usage
 
 You can pass a URL as an argument or paste it when prompted.
 
-# pass URL as an argument
+pass URL as an argument
 ./yt-dlp-macos-cpp "https://www.youtube.com/watch?v=EXAMPLE"
 
-# or run with no args and paste the URL when the program asks
+or run with no args and paste the URL when the program asks
 ./yt-dlp-macos-cpp
 
-What the program does
+# What the program does
 
 Calls yt-dlp with format sorting that prefers H.264 MP4 when possible.
 
@@ -63,7 +63,7 @@ Streams live progress (the familiar yt-dlp progress lines) in Xcode’s console.
 
 Optionally opens Finder → Downloads after completion.
 
-Output
+# Output
 
 Video: ~/Downloads/<Title>.mp4 (video+audio merged)
 
@@ -73,7 +73,7 @@ To enable audio-only in your code, add to the yt-dlp args:
 
 -x --audio-format mp3
 
-Common issues & fixes
+# Common issues & fixes
 
 Got video but no audio:
 Install ffmpeg (brew install ffmpeg). If already installed, Xcode might not find it—ensure your code includes:
@@ -90,7 +90,7 @@ The app intentionally saves to ~/Downloads. Xcode’s working dir is a DerivedDa
 Slow/blocked downloads:
 Some sites rate-limit. Try again later or add --concurrent-fragments 4 for HLS sites.
 
-Example command (Terminal sanity check)
+# Example command (Terminal sanity check)
 
 Use this once to confirm your environment is good (should produce an mp4 with audio in Downloads):
 
@@ -100,7 +100,7 @@ yt-dlp --ffmpeg-location /opt/homebrew/bin/ffmpeg \
   -P ~/Downloads -o "%(title)s.%(ext)s" \
   "https://www.youtube.com/watch?v=EXAMPLE"
 
-macOS friendliness
+# macOS friendliness
 
 Works on Apple Silicon and Intel Macs via Homebrew.
 
@@ -110,7 +110,7 @@ Uses $HOME so paths are username-agnostic.
 
 Finder integration (open "$HOME/Downloads") for a native feel.
 
-Project structure (suggested)
+# Project structure (suggested)
 .
 ├─ README.md
 ├─ .gitignore
@@ -124,10 +124,10 @@ Project structure (suggested)
 /build
 DerivedData/
 
-Legal
+# Legal
 
 Only download content you have the right to download. Respect each site’s Terms of Service and local laws.
 
-License
+# License
 
 MIT — do whatever you want, just include the license.
