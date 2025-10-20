@@ -31,6 +31,6 @@ int main(int argc, char** argv) {
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) std::cout << buffer.data();
 
     std::system("open \"$HOME/Downloads\"");
-    std::cout << "\nDone! Saved to ~/Downloads (Finder opened(Thank you for using my repo!!))\n";
+    std::cout << "\nDone! Saved to ~/Downloads (Finder opened)\n";
     return 0;
 }
