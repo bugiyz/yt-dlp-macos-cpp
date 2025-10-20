@@ -1,0 +1,40 @@
+﻿Paste video URL: https://youtu.be/cugWn3hHqOc?si=oLHJAkYTN-jFgX5y
+[youtube] Extracting URL: https://youtu.be/cugWn3hHqOc?si=oLHJAkYTN-jFgX5y
+[youtube] cugWn3hHqOc: Downloading webpage
+[youtube] cugWn3hHqOc: Downloading tv client config
+[youtube] cugWn3hHqOc: Downloading tv player API JSON
+[youtube] cugWn3hHqOc: Downloading web safari player API JSON
+[youtube] cugWn3hHqOc: Downloading m3u8 information
+[info] cugWn3hHqOc: Downloading 1 format(s): 135+140
+[download] Sleeping 4.00 seconds as required by the site...
+[download] Destination: /Users/danielacosta/Downloads/Low Roar - Give Up.f135.mp4
+[download]   0.1% of 1015.97KiB at  816.33KiB/s ETA 00:01
+[download]   0.3% of 1015.97KiB at    1.30MiB/s ETA 00:00
+[download]   0.7% of 1015.97KiB at    2.39MiB/s ETA 00:00
+[download]   1.5% of 1015.97KiB at    4.27MiB/s ETA 00:00
+[download]   3.1% of 1015.97KiB at    4.70MiB/s ETA 00:00
+[download]   6.2% of 1015.97KiB at    5.03MiB/s ETA 00:00
+[download]  12.5% of 1015.97KiB at    5.80MiB/s ETA 00:00
+[download]  25.1% of 1015.97KiB at    7.73MiB/s ETA 00:00
+[download]  50.3% of 1015.97KiB at   10.09MiB/s ETA 00:00
+[download] 100.0% of 1015.97KiB at    9.19MiB/s ETA 00:00
+[download] 100% of 1015.97KiB in 00:00:00 at 3.56MiB/s   
+[download] Destination: /Users/danielacosta/Downloads/Low Roar - Give Up.f140.m4a
+[download]   0.0% of    2.92MiB at  542.04KiB/s ETA 00:05
+[download]   0.1% of    2.92MiB at  934.28KiB/s ETA 00:03
+[download]   0.2% of    2.92MiB at    1.67MiB/s ETA 00:01
+[download]   0.5% of    2.92MiB at    3.02MiB/s ETA 00:00
+[download]   1.0% of    2.92MiB at    5.29MiB/s ETA 00:00
+[download]   2.1% of    2.92MiB at    9.37MiB/s ETA 00:00
+[download]   4.2% of    2.92MiB at   16.38MiB/s ETA 00:00
+[download]   8.5% of    2.92MiB at   19.04MiB/s ETA 00:00
+[download]  17.1% of    2.92MiB at   16.80MiB/s ETA 00:00
+[download]  34.2% of    2.92MiB at   15.41MiB/s ETA 00:00
+[download]  68.4% of    2.92MiB at   14.88MiB/s ETA 00:00
+[download] 100.0% of    2.92MiB at   17.84MiB/s ETA 00:00
+[download] 100% of    2.92MiB in 00:00:00 at 13.37MiB/s  
+[Merger] Merging formats into "/Users/danielacosta/Downloads/Low Roar - Give Up.mp4"
+Deleting original file /Users/danielacosta/Downloads/Low Roar - Give Up.f135.mp4 (pass -k to keep)
+Deleting original file /Users/danielacosta/Downloads/Low Roar - Give Up.f140.m4a (pass -k to keep)
+Done! Saved to ~/Downloads (Finder opened(Thank you for using my repo!!))
+Program ended with exit code: 0
