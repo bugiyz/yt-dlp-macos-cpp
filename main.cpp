@@ -671,7 +671,7 @@ int main(int argc, char** argv) {
             ok = ok && arglist_push_copy(&yt_args, "0");
         } else {
             ok = ok && arglist_push_copy(&yt_args, "-f");
-            ok = ok && arglist_push_copy(&yt_args, "bv*+ba/b");
+            ok = ok && arglist_push_copy(&yt_args, "bv*[vcodec^=avc1][acodec^=mp4a]/bv*+ba/b");
             ok = ok && arglist_push_copy(&yt_args, "--merge-output-format");
             ok = ok && arglist_push_copy(&yt_args, "mp4");
         }
