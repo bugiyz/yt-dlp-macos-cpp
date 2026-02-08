@@ -509,6 +509,38 @@ static int run_process(const char* executable, const struct ArgList* args) {
     return 1;
 }
 
+static void open_finder_async(const char* output_dir) {
+    if (output_dir == NULL || output_dir[0] == '\0') {
+        return;
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        return;
+    }
+
+    if (pid > 0) {
+        int status = 0;
+        waitpid(pid, &status, WNOHANG);
+        return;
+    }
+
+    pid_t pid2 = fork();
+    if (pid2 < 0) {
+        _exit(0);
+    }
+    if (pid2 > 0) {
+        _exit(0);
+    }
+
+    char* argv_exec[3];
+    argv_exec[0] = const_cast<char*>("open");
+    argv_exec[1] = const_cast<char*>(output_dir);
+    argv_exec[2] = NULL;
+    execvp("open", argv_exec);
+    _exit(0);
+}
+
 static char* build_output_template(const char* output_dir) {
     const char* pattern = "%(title).200s [%(id)s].%(ext)s";
     size_t dir_len = strlen(output_dir);
@@ -769,6 +801,8 @@ int main(int argc, char** argv) {
     } else {
         ok = ok && arglist_push_copy(&yt_args, "-f");
         ok = ok && arglist_push_copy(&yt_args, "bv*+ba/b");
+        ok = ok && arglist_push_copy(&yt_args, "--merge-output-format");
+        ok = ok && arglist_push_copy(&yt_args, "mp4");
     }
 
     ok = ok && arglist_push_copy(&yt_args, url);
@@ -794,6 +828,8 @@ int main(int argc, char** argv) {
     int exit_code = run_process(yt_dlp_path, &yt_args);
     if (exit_code == 0) {
         printf("Done.\n");
+        fflush(stdout);
+        open_finder_async(expanded_dir);
     }
 
     arglist_free(&yt_args);
