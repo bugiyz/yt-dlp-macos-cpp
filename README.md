@@ -1,136 +1,91 @@
-# yt-dlp-macos-cpp (Xcode CLI)
+# awesomeyt (macOS Terminal CLI)
 
-A tiny C++ command-line wrapper around yt-dlp that downloads videos on macOS and saves the final merged .mp4 (with audio) straight to ~/Downloads. 
-Built as an Xcode Command Line Tool, it launches yt-dlp as a subprocess, streams progress to the console, and (optionally) opens Finder when done.
+`awesomeyt` is a local-only Bash wrapper around `yt-dlp` + `ffmpeg`.
 
-# Requirements (macOS)
+- No backend/server
+- Single-video downloads by default (`--no-playlist`)
+- Video mode by default, audio mode available (`--audio`)
+- Safe defaults with strict Bash error handling
 
-Install the two Homebrew packages:
+## Requirements
 
-brew install yt-dlp
+Install dependencies with Homebrew:
 
-brew install ffmpeg
+```bash
+brew update
+brew install yt-dlp ffmpeg
+```
 
+## Install `awesomeyt`
 
-Verify:
+From this repo root:
 
-yt-dlp --version
+```bash
+# Create local bin dir
+mkdir -p "$HOME/.local/bin"
 
-ffmpeg -version
+# Install script
+cp ./awesomeyt "$HOME/.local/bin/awesomeyt"
 
+# Make executable
+chmod +x "$HOME/.local/bin/awesomeyt"
 
-Why both? yt-dlp fetches separate video+audio streams; ffmpeg merges them. Without ffmpeg, you’ll get a silent video.
+# Add ~/.local/bin to PATH for zsh (if missing)
+grep -qxF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc" || \
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
 
-# Build (Xcode)
+# Reload shell config for current terminal
+source "$HOME/.zshrc"
+hash -r
+```
 
-Open the Xcode project (template: Command Line Tool, language: C++).
+## Usage
 
-Put your code in main.cpp.
+```bash
+awesomeyt
+awesomeyt <url>
+awesomeyt --audio <url>
+awesomeyt --video <url>
+awesomeyt --dir "<folder>" <url>
+awesomeyt -h
+```
 
-Make sure the absolute paths in code match your system (check in Terminal):
+## Defaults
 
-which yt-dlp
+- Default mode: `video`
+- Default output directory: `~/Downloads/AwesomeYT`
+- Default format: `-f "bv*+ba/b"`
+- Output template: `%(title).200s [%(id)s].%(ext)s`
+- Always uses: `--newline --progress --no-playlist`
 
-which ffmpeg
+Audio mode adds:
 
+```bash
+-x --audio-format mp3 --audio-quality 0
+```
 
-Typical Apple Silicon paths:
+## Quick Test Plan
 
-/opt/homebrew/bin/yt-dlp
+```bash
+# 1) Help
+awesomeyt --help
 
-/opt/homebrew/bin/ffmpeg
+# 2) Prompt flow (paste URL when asked)
+awesomeyt
 
-Run in Xcode.
+# 3) Video mode with direct URL
+awesomeyt "https://www.youtube.com/watch?v=VIDEO_ID"
 
-Note: Xcode doesn’t inherit your shell PATH. That’s why the code passes --ffmpeg-location and uses absolute paths.
+# 4) Audio mode
+awesomeyt --audio "https://www.youtube.com/watch?v=VIDEO_ID"
 
-# Usage
+# 5) Custom directory
+awesomeyt --dir "$HOME/Desktop/AwesomeYTTest" "https://www.youtube.com/watch?v=VIDEO_ID"
 
-You can pass a URL as an argument or paste it when prompted.
+# 6) URL validation (should fail)
+awesomeyt ""
+```
 
-pass URL as an argument
-./yt-dlp-macos-cpp "https://www.youtube.com/watch?v=EXAMPLE"
+## Legal
 
-or run with no args and paste the URL when the program asks
-./yt-dlp-macos-cpp
-
-# What the program does
-
-Calls yt-dlp with format sorting that prefers H.264 MP4 when possible.
-
-Uses --ffmpeg-location to point directly to Homebrew’s ffmpeg.
-
-Saves into ~/Downloads with filename template %(title)s.%(ext)s.
-
-Streams live progress (the familiar yt-dlp progress lines) in Xcode’s console.
-
-Optionally opens Finder → Downloads after completion.
-
-# Output
-
-Video: ~/Downloads/<Title>.mp4 (video+audio merged)
-
-Audio-only (optional): If you add the flags below, you’ll get ~/Downloads/<Title>.mp3
-
-To enable audio-only in your code, add to the yt-dlp args:
-
--x --audio-format mp3
-
-# Common issues & fixes
-
-Got video but no audio:
-Install ffmpeg (brew install ffmpeg). If already installed, Xcode might not find it—ensure your code includes:
-
---ffmpeg-location "/opt/homebrew/bin/ffmpeg"
-
-
-“yt-dlp not found”:
-Use the absolute path from which yt-dlp in your code (e.g., /opt/homebrew/bin/yt-dlp).
-
-File not in your project folder:
-The app intentionally saves to ~/Downloads. Xcode’s working dir is a DerivedData path you don’t want to use.
-
-Slow/blocked downloads:
-Some sites rate-limit. Try again later or add --concurrent-fragments 4 for HLS sites.
-
-# Example command (Terminal sanity check)
-
-Use this once to confirm your environment is good (should produce an mp4 with audio in Downloads):
-
-yt-dlp --ffmpeg-location /opt/homebrew/bin/ffmpeg \
-  -f "bv*+ba/b" -S "vcodec:h264,res,ext" \
-  --merge-output-format mp4 \
-  -P ~/Downloads -o "%(title)s.%(ext)s" \
-  "https://www.youtube.com/watch?v=EXAMPLE"
-
-# macOS friendliness
-
-Works on Apple Silicon and Intel Macs via Homebrew.
-
-No Python/venv setup required (uses yt-dlp’s installed binary).
-
-Uses $HOME so paths are username-agnostic.
-
-Finder integration (open "$HOME/Downloads") for a native feel.
-
-# Project structure (suggested)
-.
-├─ README.md
-├─ .gitignore
-└─ src/
-   └─ main.cpp
-
-
-.gitignore (minimal)
-
-.DS_Store
-/build
-DerivedData/
-
-# Legal
-
-Only download content you have the right to download. Respect each site’s Terms of Service and local laws.
-
-# License
-
-MIT — do whatever you want, just include the license.
+Only download content you own or have permission to download.
