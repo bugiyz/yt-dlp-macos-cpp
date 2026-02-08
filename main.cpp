@@ -828,6 +828,9 @@ int main(int argc, char** argv) {
     int exit_code = run_process(yt_dlp_path, &yt_args);
     if (exit_code == 0) {
         printf("Done.\n");
+        printf("Download complete.\n");
+        printf("To update awesomeyt later, run:\n");
+        printf("  cd <project-dir> && ./deploy.sh\n");
         fflush(stdout);
         open_finder_async(expanded_dir);
     }
