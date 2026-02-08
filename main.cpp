@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -67,26 +66,6 @@ static char* trim_copy(const char* s) {
     }
     out[len] = '\0';
     return out;
-}
-
-static int is_http_url_str(const char* s) {
-    if (s == NULL) {
-        return 0;
-    }
-
-    for (const char* p = s; *p != '\0'; ++p) {
-        if (isspace(static_cast<unsigned char>(*p))) {
-            return 0;
-        }
-    }
-
-    if (strncasecmp(s, "https://", 8) == 0) {
-        return s[8] != '\0';
-    }
-    if (strncasecmp(s, "http://", 7) == 0) {
-        return s[7] != '\0';
-    }
-    return 0;
 }
 
 static void print_help(const char* argv0) {
@@ -357,116 +336,6 @@ static int ensure_directory_exists(const char* path) {
     return 1;
 }
 
-static int append_to_buffer(char** data, size_t* size, size_t* capacity, const char* chunk, size_t chunk_len) {
-    if (*size + chunk_len + 1 > *capacity) {
-        size_t new_cap = (*capacity == 0) ? 1024 : *capacity;
-        while (new_cap < *size + chunk_len + 1) {
-            new_cap *= 2;
-        }
-        char* new_data = static_cast<char*>(realloc(*data, new_cap));
-        if (new_data == NULL) {
-            return 0;
-        }
-        *data = new_data;
-        *capacity = new_cap;
-    }
-
-    memcpy(*data + *size, chunk, chunk_len);
-    *size += chunk_len;
-    (*data)[*size] = '\0';
-    return 1;
-}
-
-static int read_command_stdout(const char* command, char** out_text) {
-    *out_text = NULL;
-
-    int fds[2];
-    if (pipe(fds) != 0) {
-        return 0;
-    }
-
-    pid_t pid = fork();
-    if (pid < 0) {
-        close(fds[0]);
-        close(fds[1]);
-        return 0;
-    }
-
-    if (pid == 0) {
-        close(fds[0]);
-        if (dup2(fds[1], STDOUT_FILENO) == -1) {
-            _exit(127);
-        }
-        close(fds[1]);
-
-        char* argv_exec[2];
-        argv_exec[0] = const_cast<char*>(command);
-        argv_exec[1] = NULL;
-        execvp(command, argv_exec);
-        _exit(127);
-    }
-
-    close(fds[1]);
-
-    char* data = NULL;
-    size_t size = 0;
-    size_t capacity = 0;
-    char buffer[4096];
-
-    while (1) {
-        ssize_t n = read(fds[0], buffer, sizeof(buffer));
-        if (n > 0) {
-            if (!append_to_buffer(&data, &size, &capacity, buffer, static_cast<size_t>(n))) {
-                free(data);
-                close(fds[0]);
-                int status = 0;
-                waitpid(pid, &status, 0);
-                return 0;
-            }
-            continue;
-        }
-
-        if (n == 0) {
-            break;
-        }
-
-        if (errno == EINTR) {
-            continue;
-        }
-
-        free(data);
-        close(fds[0]);
-        int status = 0;
-        waitpid(pid, &status, 0);
-        return 0;
-    }
-
-    close(fds[0]);
-
-    int status = 0;
-    while (waitpid(pid, &status, 0) == -1) {
-        if (errno != EINTR) {
-            free(data);
-            return 0;
-        }
-    }
-
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        free(data);
-        return 0;
-    }
-
-    if (data == NULL) {
-        data = dup_cstr("");
-        if (data == NULL) {
-            return 0;
-        }
-    }
-
-    *out_text = data;
-    return 1;
-}
-
 static int run_process(const char* executable, const struct ArgList* args) {
     pid_t pid = fork();
     if (pid < 0) {
@@ -671,42 +540,24 @@ int main(int argc, char** argv) {
             return 1;
         }
     } else {
-        char* clipboard = NULL;
-        if (read_command_stdout("pbpaste", &clipboard)) {
-            char* trimmed_clip = trim_copy(clipboard);
-            free(clipboard);
-            clipboard = NULL;
+        printf("Paste URL: ");
+        fflush(stdout);
 
-            if (trimmed_clip != NULL) {
-                if (is_http_url_str(trimmed_clip)) {
-                    url = trimmed_clip;
-                    printf("Using URL from clipboard.\n");
-                } else {
-                    free(trimmed_clip);
-                }
-            }
+        char* line = NULL;
+        size_t cap = 0;
+        ssize_t nread = getline(&line, &cap, stdin);
+        if (nread < 0) {
+            free(line);
+            line = NULL;
         }
 
+        url = trim_copy((line != NULL) ? line : "");
+        free(line);
         if (url == NULL) {
-            printf("Paste URL: ");
-            fflush(stdout);
-
-            char* line = NULL;
-            size_t cap = 0;
-            ssize_t nread = getline(&line, &cap, stdin);
-            if (nread < 0) {
-                free(line);
-                line = NULL;
-            }
-
-            url = trim_copy((line != NULL) ? line : "");
-            free(line);
-            if (url == NULL) {
-                fprintf(stderr, "Error: out of memory.\n");
-                free(options.output_dir);
-                free(options.url);
-                return 1;
-            }
+            fprintf(stderr, "Error: out of memory.\n");
+            free(options.output_dir);
+            free(options.url);
+            return 1;
         }
     }
 
