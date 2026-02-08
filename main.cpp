@@ -831,8 +831,12 @@ int main(int argc, char** argv) {
         printf("Download complete.\n");
         printf("To update awesomeyt later, run:\n");
         printf("  cd <project-dir> && ./deploy.sh\n");
+        printf("Press Ctrl+C to exit awesomeyt.\n");
         fflush(stdout);
         open_finder_async(expanded_dir);
+        while (1) {
+            pause();
+        }
     }
 
     arglist_free(&yt_args);
