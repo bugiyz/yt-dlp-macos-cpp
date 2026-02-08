@@ -410,29 +410,27 @@ static void open_finder_async(const char* output_dir) {
     _exit(0);
 }
 
-static char* build_output_template(const char* output_dir) {
+static char* build_output_template(void) {
     const char* pattern = "%(title).200s [%(id)s].%(ext)s";
-    size_t dir_len = strlen(output_dir);
-    size_t pattern_len = strlen(pattern);
-    int need_sep = (dir_len > 0 && output_dir[dir_len - 1] != '/');
+    return dup_cstr(pattern);
+}
 
-    char* out = static_cast<char*>(malloc(dir_len + (need_sep ? 1 : 0) + pattern_len + 1));
+static char* build_paths_home_value(const char* output_dir) {
+    const char* prefix = "home:";
+    size_t prefix_len = strlen(prefix);
+    size_t dir_len = strlen(output_dir);
+    char* out = static_cast<char*>(malloc(prefix_len + dir_len + 1));
     if (out == NULL) {
         return NULL;
     }
-
-    memcpy(out, output_dir, dir_len);
-    size_t pos = dir_len;
-    if (need_sep) {
-        out[pos++] = '/';
-    }
-    memcpy(out + pos, pattern, pattern_len + 1);
+    memcpy(out, prefix, prefix_len);
+    memcpy(out + prefix_len, output_dir, dir_len + 1);
     return out;
 }
 
 static int parse_args(int argc, char** argv, struct Options* options) {
     options->mode = MODE_VIDEO;
-    options->output_dir = dup_cstr("~/Downloads/AwesomeYT");
+    options->output_dir = dup_cstr("~/Downloads");
     options->url = NULL;
     options->show_help = 0;
 
@@ -530,51 +528,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    char* url = NULL;
-    if (options.url != NULL) {
-        url = trim_copy(options.url);
-        if (url == NULL) {
-            fprintf(stderr, "Error: out of memory.\n");
-            free(options.output_dir);
-            free(options.url);
-            return 1;
-        }
-    } else {
-        printf("Paste URL: ");
-        fflush(stdout);
-
-        char* line = NULL;
-        size_t cap = 0;
-        ssize_t nread = getline(&line, &cap, stdin);
-        if (nread < 0) {
-            free(line);
-            line = NULL;
-        }
-
-        url = trim_copy((line != NULL) ? line : "");
-        free(line);
-        if (url == NULL) {
-            fprintf(stderr, "Error: out of memory.\n");
-            free(options.output_dir);
-            free(options.url);
-            return 1;
-        }
-    }
-
-    if (url[0] == '\0') {
-        fprintf(stderr, "Error: URL is required and cannot be empty.\n");
-        free(options.output_dir);
-        free(options.url);
-        free(url);
-        return 1;
-    }
-
     char* expanded_dir = expand_tilde_path(options.output_dir);
     if (expanded_dir == NULL || expanded_dir[0] == '\0') {
         fprintf(stderr, "Error: could not expand output directory '%s'.\n", options.output_dir);
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         return 1;
     }
@@ -584,7 +542,6 @@ int main(int argc, char** argv) {
                 expanded_dir, strerror(errno));
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         return 1;
     }
@@ -596,7 +553,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "  brew install yt-dlp\n");
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         return 1;
     }
@@ -609,95 +565,148 @@ int main(int argc, char** argv) {
         fprintf(stderr, "  brew install ffmpeg\n");
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         free(yt_dlp_path);
         return 1;
     }
 
-    char* output_template = build_output_template(expanded_dir);
+    char* output_template = build_output_template();
     if (output_template == NULL) {
         fprintf(stderr, "Error: out of memory.\n");
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         free(yt_dlp_path);
         free(ffmpeg_path);
         return 1;
     }
 
-    struct ArgList yt_args;
-    arglist_init(&yt_args);
-
-    int ok = 1;
-    ok = ok && arglist_push_copy(&yt_args, "--newline");
-    ok = ok && arglist_push_copy(&yt_args, "--progress");
-    ok = ok && arglist_push_copy(&yt_args, "--no-playlist");
-    ok = ok && arglist_push_copy(&yt_args, "--restrict-filenames");
-    ok = ok && arglist_push_copy(&yt_args, "-o");
-    ok = ok && arglist_push_copy(&yt_args, output_template);
-
-    if (has_ffmpeg) {
-        ok = ok && arglist_push_copy(&yt_args, "--ffmpeg-location");
-        ok = ok && arglist_push_copy(&yt_args, ffmpeg_path);
-    }
-
-    if (options.mode == MODE_AUDIO) {
-        ok = ok && arglist_push_copy(&yt_args, "-x");
-        ok = ok && arglist_push_copy(&yt_args, "--audio-format");
-        ok = ok && arglist_push_copy(&yt_args, "mp3");
-        ok = ok && arglist_push_copy(&yt_args, "--audio-quality");
-        ok = ok && arglist_push_copy(&yt_args, "0");
-    } else {
-        ok = ok && arglist_push_copy(&yt_args, "-f");
-        ok = ok && arglist_push_copy(&yt_args, "bv*+ba/b");
-        ok = ok && arglist_push_copy(&yt_args, "--merge-output-format");
-        ok = ok && arglist_push_copy(&yt_args, "mp4");
-    }
-
-    ok = ok && arglist_push_copy(&yt_args, url);
-
-    if (!ok) {
-        fprintf(stderr, "Error: out of memory while preparing arguments.\n");
-        arglist_free(&yt_args);
+    char* paths_home_value = build_paths_home_value(expanded_dir);
+    if (paths_home_value == NULL) {
+        fprintf(stderr, "Error: out of memory.\n");
         free(output_template);
         free(options.output_dir);
         free(options.url);
-        free(url);
         free(expanded_dir);
         free(yt_dlp_path);
         free(ffmpeg_path);
         return 1;
     }
 
-    printf("Only download content you own or have permission to download.\n");
-    printf("Mode: %s\n", options.mode == MODE_AUDIO ? "audio" : "video");
-    printf("Output directory: %s\n", expanded_dir);
-    fflush(stdout);
+    int first_run = 1;
+    int last_exit_code = 0;
 
-    int exit_code = run_process(yt_dlp_path, &yt_args);
-    if (exit_code == 0) {
-        printf("Done.\n");
-        printf("Download complete.\n");
-        printf("To update awesomeyt later, run:\n");
-        printf("  cd <project-dir> && ./deploy.sh\n");
-        printf("Press Ctrl+C to exit awesomeyt.\n");
-        fflush(stdout);
-        open_finder_async(expanded_dir);
-        while (1) {
-            pause();
+    while (1) {
+        char* url = NULL;
+
+        if (first_run && options.url != NULL) {
+            url = trim_copy(options.url);
+            if (url == NULL) {
+                fprintf(stderr, "Error: out of memory.\n");
+                last_exit_code = 1;
+                break;
+            }
+            first_run = 0;
+        } else {
+            printf("Paste URL: ");
+            fflush(stdout);
+
+            char* line = NULL;
+            size_t cap = 0;
+            errno = 0;
+            ssize_t nread = getline(&line, &cap, stdin);
+            if (nread < 0) {
+                free(line);
+                if (feof(stdin)) {
+                    last_exit_code = 0;
+                    break;
+                }
+                if (errno == EINTR) {
+                    clearerr(stdin);
+                    continue;
+                }
+                last_exit_code = 1;
+                break;
+            }
+
+            url = trim_copy(line);
+            free(line);
+            if (url == NULL) {
+                fprintf(stderr, "Error: out of memory.\n");
+                last_exit_code = 1;
+                break;
+            }
+            first_run = 0;
         }
+
+        if (url[0] == '\0') {
+            fprintf(stderr, "Error: URL is required and cannot be empty.\n");
+            free(url);
+            continue;
+        }
+
+        struct ArgList yt_args;
+        arglist_init(&yt_args);
+
+        int ok = 1;
+        ok = ok && arglist_push_copy(&yt_args, "--newline");
+        ok = ok && arglist_push_copy(&yt_args, "--progress");
+        ok = ok && arglist_push_copy(&yt_args, "--no-playlist");
+        ok = ok && arglist_push_copy(&yt_args, "--restrict-filenames");
+        ok = ok && arglist_push_copy(&yt_args, "--paths");
+        ok = ok && arglist_push_copy(&yt_args, paths_home_value);
+        ok = ok && arglist_push_copy(&yt_args, "-o");
+        ok = ok && arglist_push_copy(&yt_args, output_template);
+
+        if (has_ffmpeg) {
+            ok = ok && arglist_push_copy(&yt_args, "--ffmpeg-location");
+            ok = ok && arglist_push_copy(&yt_args, ffmpeg_path);
+        }
+
+        if (options.mode == MODE_AUDIO) {
+            ok = ok && arglist_push_copy(&yt_args, "-x");
+            ok = ok && arglist_push_copy(&yt_args, "--audio-format");
+            ok = ok && arglist_push_copy(&yt_args, "mp3");
+            ok = ok && arglist_push_copy(&yt_args, "--audio-quality");
+            ok = ok && arglist_push_copy(&yt_args, "0");
+        } else {
+            ok = ok && arglist_push_copy(&yt_args, "-f");
+            ok = ok && arglist_push_copy(&yt_args, "bv*+ba/b");
+            ok = ok && arglist_push_copy(&yt_args, "--merge-output-format");
+            ok = ok && arglist_push_copy(&yt_args, "mp4");
+        }
+
+        ok = ok && arglist_push_copy(&yt_args, url);
+
+        if (!ok) {
+            fprintf(stderr, "Error: out of memory while preparing arguments.\n");
+            arglist_free(&yt_args);
+            free(url);
+            last_exit_code = 1;
+            break;
+        }
+
+        int exit_code = run_process(yt_dlp_path, &yt_args);
+        arglist_free(&yt_args);
+        free(url);
+
+        if (exit_code == 0) {
+            open_finder_async(expanded_dir);
+            printf("To update awesomeyt later, run:\n");
+            printf("  ./deploy.sh\n");
+            fflush(stdout);
+        }
+
+        last_exit_code = exit_code;
     }
 
-    arglist_free(&yt_args);
     free(output_template);
+    free(paths_home_value);
     free(options.output_dir);
     free(options.url);
-    free(url);
     free(expanded_dir);
     free(yt_dlp_path);
     free(ffmpeg_path);
 
-    return exit_code;
+    return last_exit_code;
 }
