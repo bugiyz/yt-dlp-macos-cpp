@@ -597,6 +597,9 @@ int main(int argc, char** argv) {
     int last_exit_code = 0;
 
     while (1) {
+        printf("Paste a video URL (Press Ctrl+C to exit): ");
+        fflush(stdout);
+
         char* url = NULL;
 
         if (first_run && options.url != NULL) {
@@ -608,9 +611,6 @@ int main(int argc, char** argv) {
             }
             first_run = 0;
         } else {
-            printf("Paste URL: ");
-            fflush(stdout);
-
             char* line = NULL;
             size_t cap = 0;
             errno = 0;
