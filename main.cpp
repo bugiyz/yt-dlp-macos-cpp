@@ -653,6 +653,8 @@ int main(int argc, char** argv) {
         ok = ok && arglist_push_copy(&yt_args, "--progress");
         ok = ok && arglist_push_copy(&yt_args, "--no-playlist");
         ok = ok && arglist_push_copy(&yt_args, "--restrict-filenames");
+        ok = ok && arglist_push_copy(&yt_args, "--extractor-args");
+        ok = ok && arglist_push_copy(&yt_args, "youtube:player_client=web,default");
         ok = ok && arglist_push_copy(&yt_args, "--paths");
         ok = ok && arglist_push_copy(&yt_args, paths_home_value);
         ok = ok && arglist_push_copy(&yt_args, "-o");
@@ -671,7 +673,7 @@ int main(int argc, char** argv) {
             ok = ok && arglist_push_copy(&yt_args, "0");
         } else {
             ok = ok && arglist_push_copy(&yt_args, "-f");
-            ok = ok && arglist_push_copy(&yt_args, "bv*[vcodec^=avc1][acodec^=mp4a]/bv*+ba/b");
+            ok = ok && arglist_push_copy(&yt_args, "bv*[vcodec^=avc1]+ba[acodec^=mp4a]/bv*[vcodec^=avc1]+ba/bv*+ba/b");
             ok = ok && arglist_push_copy(&yt_args, "--merge-output-format");
             ok = ok && arglist_push_copy(&yt_args, "mp4");
         }
